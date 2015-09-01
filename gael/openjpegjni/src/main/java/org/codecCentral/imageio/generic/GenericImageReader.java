@@ -127,6 +127,7 @@ public abstract class GenericImageReader extends ImageReader {
 		return bufimg;
 	}
 
+      @Override
 	public void setInput(Object input, boolean seekForwardOnly,
 			boolean ignoreMetadata) {
 		reset();
@@ -149,10 +150,14 @@ public abstract class GenericImageReader extends ImageReader {
 				
 				ImageInputStream iis = (ImageInputStream)input;
 				byte[] compressedBytes = new byte[(int)iis.length()];
-				int bytesRead = 0;
+                        byte[] tempBuffer = new byte[TEMP_BUFFER_SIZE];
+				int bytesRead;
 				int offset = 0;
-				while ((bytesRead = iis.read(compressedBytes,offset, TEMP_BUFFER_SIZE)) != -1)
-					offset +=bytesRead;
+				while ((bytesRead = iis.read(tempBuffer , 0, TEMP_BUFFER_SIZE)) != -1)
+                        {
+                           System.arraycopy (tempBuffer, 0, compressedBytes, offset, bytesRead);
+                           offset += bytesRead;
+                        }
 				decoder.setCompressedStream(compressedBytes);
 			} catch (IOException ioe) {
 				throw new RuntimeException("Unable to read data from ImageInputStream", ioe);

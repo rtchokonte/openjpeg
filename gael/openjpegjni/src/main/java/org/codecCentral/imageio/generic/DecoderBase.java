@@ -135,12 +135,12 @@ public abstract class DecoderBase extends DecoderEncoderBase {
 	public boolean canDecode(String fname)
 	{
 		String[] args = new String[]{fname};
-		return  internalGetFormat(convertArguments(args)) == 0;
+		return  internalGetFormat(convertArguments(args)) != -1;
 	}
 	public boolean canDecode(byte[] buffer)
 	{
 		compressedStream = buffer;
-		boolean canDecode =   internalGetFormat(convertArguments(new String[]{})) == 0;
+		boolean canDecode =   internalGetFormat(convertArguments(new String[]{})) != -1;
 		compressedStream = null;
 		return canDecode;
 	}
