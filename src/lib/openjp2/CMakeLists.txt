@@ -4,9 +4,16 @@ include_regular_expression("^.*$")
 install( FILES  ${CMAKE_CURRENT_BINARY_DIR}/opj_config.h
  DESTINATION ${OPENJPEG_INSTALL_INCLUDE_DIR} COMPONENT Headers)
 
+find_package(JNI REQUIRED)
+include_directories(${JNI_INCLUDE_DIRS})
 include_directories(
   ${OPENJPEG_BINARY_DIR}/src/lib/openjp2 # opj_config.h and opj_config_private.h
+  ${OPENJPEG_SOURCE_DIR}/src/lib/openjp2
+  ${OPENJPEG_BINARY_DIR}/src/bin/common # opj_config.h
+  ${OPENJPEG_SOURCE_DIR}/src/bin/common
+  ${OPENJPEG_SOURCE_DIR}/src/bin/jp2
 )
+
 # Defines the source code for the library
 set(OPENJPEG_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/bio.c
@@ -28,6 +35,10 @@ set(OPENJPEG_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/tcd.c
   ${CMAKE_CURRENT_SOURCE_DIR}/tgt.c
   ${CMAKE_CURRENT_SOURCE_DIR}/function_list.c
+  ${OPENJPEG_SOURCE_DIR}/src/bin/common/opj_getopt.c
+  ${OPENJPEG_SOURCE_DIR}/src/bin/common/color.c
+  ${OPENJPEG_SOURCE_DIR}/wrapping/java/openjp2/OpenJPEGJava.c
+  ${OPENJPEG_SOURCE_DIR}/wrapping/java/openjp2/OpenJPEGJavaDecoder.c
 )
 if(BUILD_JPIP)
   add_definitions(-DUSE_JPIP)
@@ -50,10 +61,16 @@ if(WIN32)
   endif()
 endif()
 add_library(${OPENJPEG_LIBRARY_NAME} ${OPENJPEG_SRCS})
+
+target_link_libraries(${OPENJPEG_LIBRARY_NAME} ${PNG_LIBNAME} ${TIFF_LIBNAME} ${LCMS_LIBNAME} ${Z_LIBNAME})
 if(UNIX)
   target_link_libraries(${OPENJPEG_LIBRARY_NAME} m)
 endif()
+
 set_target_properties(${OPENJPEG_LIBRARY_NAME} PROPERTIES ${OPENJPEG_LIBRARY_PROPERTIES})
+
+# adding property no soname
+set_property(TARGET ${OPENJPEG_LIBRARY_NAME} PROPERTY NO_SONAME 1)
 
 # Install library
 install(TARGETS ${OPENJPEG_LIBRARY_NAME}

@@ -40,7 +40,7 @@
 #include <errno.h>
 
 #include "opj_includes.h"
-#include <openjpeg.h>
+#include "openjpeg.h"
 #include "opj_malloc.h"
 
 #include "org_openJpeg_OpenJPEGJavaDecoder.h"

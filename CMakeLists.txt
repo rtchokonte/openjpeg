@@ -258,8 +258,8 @@ if(BUILD_CODEC OR BUILD_MJ2)
   # ON: 3rd party libs will ALWAYS be build, and used
   option(BUILD_THIRDPARTY "Build the thirdparty executables if it is needed" OFF)
   add_subdirectory(thirdparty)
-  add_subdirectory(src/bin)
 endif ()
+add_subdirectory(src/bin)
 add_subdirectory(wrapping)
 
 #-----------------------------------------------------------------------------

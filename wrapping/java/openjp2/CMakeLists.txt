@@ -45,3 +45,20 @@ install(TARGETS openjpegjni
   EXPORT OpenJPEGTargets
   LIBRARY DESTINATION ${OPENJPEG_INSTALL_JNI_DIR} COMPONENT Libraries
 )
+################################################################################
+if(UNIX)
+  add_custom_command(
+    TARGET openjpegjni
+    POST_BUILD
+    COMMAND echo "Re-compile library openjpegjni..."
+    COMMAND cp ${OPENJPEG_BINARY_DIR}/bin/libopenjp2.so ${OPENJPEG_BINARY_DIR}/wrapping/java/openjp2
+    COMMAND cc -fPIC -shared
+      -o ${OPENJPEG_BINARY_DIR}/bin/libopenjpegjni.so
+      CMakeFiles/openjpegjni.dir/OpenJPEGJavaDecoder.c.o
+      CMakeFiles/openjpegjni.dir/OpenJPEGJava.c.o
+      CMakeFiles/openjpegjni.dir/__/__/__/src/bin/common/opj_getopt.c.o
+      CMakeFiles/openjpegjni.dir/__/__/__/src/bin/common/color.c.o
+      libopenjp2.so
+      -lpng -lz -ltiff -llcms2 -lz -lm -ltiff -llcms2 -lm -Wl,-rpath,/home/lambert/lib:.
+  )
+endif()

@@ -1,7 +1,9 @@
 # source code for openjpeg apps:
 add_subdirectory(common)
 # Part 1 & 2:
-add_subdirectory(jp2)
+if(BUILD_CODEC OR BUILD_MJ2)
+  add_subdirectory(jp2)
+endif()
 
 # optionals components:
 if(BUILD_JPWL)
