@@ -11,6 +11,29 @@
    <packaging>pom</packaging>
 
    <name>OpenJpeg Libraries</name>
+   
+   <properties>
+      <project.build.directory>${basedir}/target</project.build.directory>
+      <openjpeg.classifier>${os.name}-${os.arch}</openjpeg.classifier>
+      <openjpeg.version>2.1.0</openjpeg.version>
+   </properties>
+   
+   <distributionManagement>
+      <repository>
+         <id>gael-repository-releases</id>
+         <name>GAEL Systems - Main Repository Releases</name>
+         <uniqueVersion>true</uniqueVersion>
+         <url>http://repository.gael.fr:8081/nexus/content/repositories/releases</url>
+         <layout>default</layout>
+      </repository>
+      <snapshotRepository>
+         <id>gael-repository-snapshot</id>
+         <name>GAEL Systems - Main Repository Snapshot</name>
+         <uniqueVersion>true</uniqueVersion>
+         <url>http://repository.gael.fr:8081/nexus/content/repositories/snapshots</url>
+         <layout>default</layout>
+      </snapshotRepository>
+   </distributionManagement>
 
    <build>
       <plugins>
@@ -26,13 +49,13 @@
                   </goals>
                   <configuration>
                      <sourcePath>../../</sourcePath>
-                     <targetPath>target</targetPath>
+                     <targetPath>${project.build.directory}</targetPath>
                      <generator>Unix Makefiles</generator>
                      <options>
                         <option>-DBUILD_SHARED_LIBS:bool=on</option>
                         <option>-DCMAKE_INSTALL_PREFIX=${basedir}/target</option>
-                        <option>-DBUILD_CODEC:bool=on</option>
-                        <option>-DBUILD_JAVA:bool=on</option>
+                        <option>-DBUILD_CODEC:bool=off</option>
+                        <option>-DBUILD_JAVA:bool=off</option>
                      </options>
                   </configuration>
                </execution>
@@ -42,7 +65,58 @@
                      <goal>compile</goal>
                   </goals>
                   <configuration>
-                     <projectDirectory>${basedir}/target</projectDirectory>
+                     <projectDirectory>${project.build.directory}</projectDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         
+         <!-- Install native libraries -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.5.2</version>
+            <executions>
+               <execution>
+                  <id>install-libopenjpeg</id>
+                  <phase>install</phase>
+                  <goals>
+                     <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                     <file>${project.build.directory}/bin/libopenjp2.so</file>
+                     <repositoryLayout>default</repositoryLayout>
+                     <groupId>org.openJpeg</groupId>
+                     <artifactId>libopenjp2</artifactId>
+                     <version>${openjpeg.version}</version>
+                     <classifier>${openjpeg.classifier}</classifier>
+                     <packaging>so</packaging>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         
+         <!-- Deploy native libraries -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>2.8.2</version>
+            <executions>
+               <execution>
+                  <id>deploy-libopenjpeg</id>
+                  <goals>
+                     <goal>deploy-file</goal>
+                  </goals>
+                  <configuration>
+                     <file>${project.build.directory}/bin/libopenjp2.so</file>
+                     <url>http://repository.gael.fr:8081/nexus/content/repositories/releases</url>
+                     <repositoryId>gael-main</repositoryId> <!-- id server access - see your settings.xml -->
+                     <groupId>org.openJpeg</groupId>
+                     <artifactId>libopenjp2</artifactId>
+                     <version>${openjpeg.version}</version>
+                     <classifier>${openjpeg.classifier}</classifier>
+                     <packaging>so</packaging>
+                     <updateReleaseInfo>true</updateReleaseInfo>
                   </configuration>
                </execution>
             </executions>
