@@ -75,7 +75,7 @@ public class JP2KOpenJpegImageReaderSpi extends GenericImageReaderSpi {
 		nativeImageMetadataFormatClassName,
 		extraImageMetadataFormatNames,
 		extraImageMetadataFormatClassNames);
-		libraries = Arrays.asList("openjpegjni", "openjp2");
+		libraries = Arrays.asList("openjp2");
 	_utilities.loadLibraries(libraries);
 	format = "jpeg2000";
     }
