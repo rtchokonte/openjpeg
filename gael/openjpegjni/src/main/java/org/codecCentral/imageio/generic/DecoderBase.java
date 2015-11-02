@@ -78,7 +78,7 @@ public abstract class DecoderBase extends DecoderEncoderBase {
 			}			
 		}
 		decoder_arguments = args;
-		internalDecode(convertArguments(decoder_arguments));;
+		internalDecode(convertArguments(decoder_arguments));
 	}
 
 	private static byte[] getBytesFromFile(File file) throws IOException {
@@ -107,19 +107,17 @@ public abstract class DecoderBase extends DecoderEncoderBase {
 	void alloc8() {
 		if ((image8 == null || (image8 != null && image8.length != width
 				* height))
-				&& (getDepth() == 1)) {
+				&& (getDepth() == 1))
+      {
 			image8 = new byte[width * height];
-			logMessage("Decoder.alloc8: image8 length = "
-					+ image8.length + " (" + width + " x " + height + ") ");
 		}
 	}
 	void alloc16() {
 		if ((image16 == null || (image16 != null && image16.length != width
 				* height))
-				&& (getDepth() == 2)) {
+				&& (getDepth() == 2))
+      {
 			image16 = new short[width * height];
-			logMessage("Decoder.alloc16: image16 length = "
-					+ image16.length + " (" + width + " x " + height + ") ");
 		}
 	}
 	void alloc24() {
@@ -127,8 +125,6 @@ public abstract class DecoderBase extends DecoderEncoderBase {
 				getDepth() == 3)
 		{
 			image24 = new int[width * height];
-			logMessage("Decoder.alloc24: image24 length = "
-					+ image24.length + " (" + width + " x " + height + ") ");
 		}
 	}
 

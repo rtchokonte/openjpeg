@@ -28,3 +28,8 @@ obj/
 _ReSharper*/
 [Tt]est[Rr]esult*
 .metadata
+/gael/openjpeg/target/
+/gael/openjpegjni/target/
+nbactions.xml
+.idea
+*.iml

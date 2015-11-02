@@ -8,8 +8,11 @@
 
 package org.codecCentral.imageio.generic;
 
-import java.awt.Point;
-import java.awt.Transparency;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.spi.ImageReaderSpi;
+import javax.imageio.stream.ImageInputStream;
+import java.awt.*;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
@@ -18,6 +21,7 @@ import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferInt;
 import java.awt.image.DataBufferUShort;
+import java.awt.image.DirectColorModel;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.SinglePixelPackedSampleModel;
@@ -25,10 +29,6 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import javax.imageio.ImageReadParam;
-import javax.imageio.ImageReader;
-import javax.imageio.spi.ImageReaderSpi;
-import javax.imageio.stream.ImageInputStream;
 
 public abstract class GenericImageReader extends ImageReader {
 
@@ -69,118 +69,135 @@ public abstract class GenericImageReader extends ImageReader {
 	public int getNumImages(boolean allowSearch) throws IOException {
 		return numImages;
 	}
-	public BufferedImage read(int imageIndex, ImageReadParam param)
-			throws IOException {
-		checkImageIndex(imageIndex);
-		if (decoder == null)
-			return null;
 
-		decoder.decode(fileName);
-		decoder.setCompressedStream(null);
+   public BufferedImage read (int imageIndex, ImageReadParam param)
+         throws IOException
+   {
+      checkImageIndex (imageIndex);
+      if (decoder == null)
+      {
+         return null;
+      }
 
-		int width = decoder.getWidth();
-		int height = decoder.getHeight();
+      decoder.decode (fileName);
+      decoder.setCompressedStream (null);
 
-		BufferedImage bufimg=null;
+      int width = decoder.getWidth ();
+      int height = decoder.getHeight ();
 
-		byte[] buf8;
-		short[] buf16;
-		int[] buf24;
-		if ((buf24 = decoder.getImage24()) != null) {
-			int[] bitMasks = new int[] { 0xFF0000, 0xFF00, 0xFF, 0xFF000000 };
-			SinglePixelPackedSampleModel sm = new SinglePixelPackedSampleModel(
-					DataBuffer.TYPE_INT, width, height, bitMasks);
-			DataBufferInt db = new DataBufferInt(buf24, buf24.length);
-			WritableRaster wr = Raster
-					.createWritableRaster(sm, db, new Point());
-			bufimg = new BufferedImage(ColorModel.getRGBdefault(), wr, false,
-					null);
-		} else if ((buf16 = decoder.getImage16()) != null) {
-			int[] bits = { 16 };
-			ColorModel cm = new ComponentColorModel(
-					ColorSpace.getInstance(ColorSpace.CS_GRAY), bits, false,
-					false, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
+      BufferedImage bufimg = null;
 
-			SampleModel sm = cm.createCompatibleSampleModel(width, height);
+      byte[] buf8;
+      short[] buf16;
+      int[] buf24;
+      if ((buf24 = decoder.getImage24 ()) != null)
+      {
+         int[] bitMasks = new int[] { 0xFF0000, 0xFF00, 0xFF };
+         SinglePixelPackedSampleModel sm = new SinglePixelPackedSampleModel (
+               DataBuffer.TYPE_INT, width, height, bitMasks);
+         DataBufferInt db = new DataBufferInt (buf24, buf24.length);
+         WritableRaster wr = Raster.createWritableRaster (sm, db, new Point ());
+         ColorModel colorModel = new DirectColorModel (24, 0xFF0000, 0xFF00, 0xFF);
+         bufimg = new BufferedImage (colorModel, wr, false, null);
+      }
+      else if ((buf16 = decoder.getImage16 ()) != null)
+      {
+         int[] bits = {16};
+         ColorModel cm = new ComponentColorModel (
+               ColorSpace.getInstance (ColorSpace.CS_GRAY), bits, false,
+               false, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
+         SampleModel sm = cm.createCompatibleSampleModel (width, height);
+         DataBufferUShort db = new DataBufferUShort (buf16, width * height * 2);
+         WritableRaster ras = Raster.createWritableRaster (sm, db, null);
+         bufimg = new BufferedImage (cm, ras, false, null);
 
-			DataBufferUShort db = new DataBufferUShort(buf16, width * height
-					* 2);
+      }
+      else if ((buf8 = decoder.getImage8 ()) != null)
+      {
+         int[] bits = {8};
+         ColorModel cm = new ComponentColorModel (
+               ColorSpace.getInstance (ColorSpace.CS_GRAY), bits, false,
+               false, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
 
-			WritableRaster ras = Raster.createWritableRaster(sm, db, null);
+         SampleModel sm = cm.createCompatibleSampleModel (width, height);
+         DataBufferByte db = new DataBufferByte (buf8, width * height);
+         WritableRaster ras = Raster.createWritableRaster (sm, db, null);
+         bufimg = new BufferedImage (cm, ras, false, null);
+      }
+      return bufimg;
+   }
 
-			bufimg = new BufferedImage(cm, ras, false, null);
+   @Override
+   public void setInput (Object input, boolean seekForwardOnly,
+         boolean ignoreMetadata)
+   {
+      reset ();
 
-		} else if ((buf8 = decoder.getImage8()) != null) {
-			int[] bits = { 8 };
-			ColorModel cm = new ComponentColorModel(
-					ColorSpace.getInstance(ColorSpace.CS_GRAY), bits, false,
-					false, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
+      if (input == null)
+      {
+         throw new NullPointerException ("The provided input is null!");
+      }
 
-			SampleModel sm = cm.createCompatibleSampleModel(width, height);
+      if (input instanceof File)
+      {
+         inputFile = (File) input;
+      }
+      else if (input instanceof byte[])
+      {
+         decoder.setCompressedStream ((byte[]) input);
+      }
+      else if (input instanceof URL)
+      {
+         final URL tempURL = (URL) input;
+         if (tempURL.getProtocol ().equalsIgnoreCase ("file"))
+         {
+            inputFile = Utils.urlToFile (tempURL);
+         }
+      }
+      else if (input instanceof ImageInputStream)
+      {
+         try
+         {
+            ImageInputStream iis = (ImageInputStream) input;
+            byte[] compressedBytes = new byte[(int) iis.length ()];
+            byte[] tempBuffer = new byte[TEMP_BUFFER_SIZE];
+            int bytesRead;
+            int offset = 0;
+            while ((bytesRead = iis.read (tempBuffer, 0, TEMP_BUFFER_SIZE)) !=
+                   -1)
+            {
+               System.arraycopy (tempBuffer, 0, compressedBytes, offset,
+                     bytesRead);
+               offset += bytesRead;
+            }
+            decoder.setCompressedStream (compressedBytes);
+         }
+         catch (IOException ioe)
+         {
+            throw new RuntimeException (
+                  "Unable to read data from ImageInputStream", ioe);
+         }
+      }
+      else if (input instanceof SegmentedDataInfo)
+      {
+         SegmentedDataInfo info = (SegmentedDataInfo) input;
+         inputFile = new File (info.fileName);
+         decoder.SetSegmentPositions (info.segmentOffsets);
+         decoder.SetSegmentLengths (info.segmentLengths);
+      }
+      else
+      {
+         throw new IllegalArgumentException ("Incorrect input type!");
+      }
 
-			DataBufferByte db = new DataBufferByte(buf8, width * height);
+      if (this.inputFile != null)
+      {
+         fileName = inputFile.getAbsolutePath ();
+      }
 
-			WritableRaster ras = Raster.createWritableRaster(sm, db, null);
-
-			bufimg = new BufferedImage(cm, ras, false, null);
-		}
-		return bufimg;
-	}
-
-      @Override
-	public void setInput(Object input, boolean seekForwardOnly,
-			boolean ignoreMetadata) {
-		reset();
-		if (input == null)
-			throw new NullPointerException("The provided input is null!");
-		if (input instanceof File)
-		{
-			inputFile = (File) input;
-		} else if (input instanceof byte[]) 
-		{
-			decoder.setCompressedStream((byte[])input);
-		} else if (input instanceof URL)
-		{
-			final URL tempURL = (URL) input;
-			if (tempURL.getProtocol().equalsIgnoreCase("file")) {
-				inputFile = Utils.urlToFile(tempURL);
-			}
-		} else if (input instanceof ImageInputStream) {
-			try {
-				
-				ImageInputStream iis = (ImageInputStream)input;
-				byte[] compressedBytes = new byte[(int)iis.length()];
-                        byte[] tempBuffer = new byte[TEMP_BUFFER_SIZE];
-				int bytesRead;
-				int offset = 0;
-				while ((bytesRead = iis.read(tempBuffer , 0, TEMP_BUFFER_SIZE)) != -1)
-                        {
-                           System.arraycopy (tempBuffer, 0, compressedBytes, offset, bytesRead);
-                           offset += bytesRead;
-                        }
-				decoder.setCompressedStream(compressedBytes);
-			} catch (IOException ioe) {
-				throw new RuntimeException("Unable to read data from ImageInputStream", ioe);
-			}
-		}
-		else if (input instanceof SegmentedDataInfo)
-		{
-			SegmentedDataInfo info = (SegmentedDataInfo)input;
-			inputFile = new File(info.fileName);
-			decoder.SetSegmentPositions(info.segmentOffsets);
-			decoder.SetSegmentLengths(info.segmentLengths);
-	}
-		else
-		{
-			throw new IllegalArgumentException("Incorrect input type!");
-		}
-
-		if (this.inputFile != null)
-    		fileName = inputFile.getAbsolutePath();
-		
-		numImages = 1;
-		super.setInput(input, seekForwardOnly, ignoreMetadata);
-	}
+      numImages = 1;
+      super.setInput (input, seekForwardOnly, ignoreMetadata);
+   }
 
 	public void dispose() {
 		super.dispose();

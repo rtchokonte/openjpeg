@@ -18,7 +18,8 @@ import javax.imageio.spi.IIORegistry;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.spi.ImageReaderWriterSpi;
 import javax.imageio.spi.ServiceRegistry;
-import org.codecCentral.imageio.generic.DecoderBase;
+
+import it.geosolutions.imageio.stream.input.FileImageInputStreamExtImpl;
 
 public abstract class GenericImageReaderSpi extends ImageReaderSpi {
 
@@ -54,32 +55,46 @@ public abstract class GenericImageReaderSpi extends ImageReaderSpi {
     /**
      * This method checks if the provided input can be decoded from this SPI
      */
-    public boolean canDecodeInput(Object input) throws IOException {
-    	if (input == null)
-    		return false;
-    	
-        boolean isDecodable = true;
-    	DecoderBase decoder = CreateDecoder();
+    public boolean canDecodeInput (Object input) throws IOException
+    {
+       if (input == null)
+       {
+          return false;
+       }
 
-        // Retrieving the File source
-        if (input instanceof File) 
-        {
-            isDecodable =  decoder.canDecode(((File) input).getAbsolutePath());
-          
-        } else if (input instanceof byte[]) 
-        {
-        	isDecodable =  decoder.canDecode((byte[])input);
-        } else if (input instanceof URL)
-        {
-            final URL tempURL = (URL) input;
-            if (tempURL.getProtocol().equalsIgnoreCase("file")) 
-            {
-            	isDecodable =  decoder.canDecode(Utils.urlToFile(tempURL).getAbsolutePath());
-            }
-        } else
-            return false;
+       boolean isDecodable = false;
+       DecoderBase decoder = CreateDecoder ();
 
-        return isDecodable;
+       // Retrieving the File source
+       if (input instanceof File)
+       {
+          isDecodable = decoder.canDecode (((File) input).getAbsolutePath ());
+
+       }
+       else if (input instanceof byte[])
+       {
+          isDecodable = decoder.canDecode ((byte[]) input);
+       }
+       else if (input instanceof URL)
+       {
+          final URL tempURL = (URL) input;
+          if (tempURL.getProtocol ().equalsIgnoreCase ("file"))
+          {
+             isDecodable = decoder
+                   .canDecode (Utils.urlToFile (tempURL).getAbsolutePath ());
+          }
+       }
+       else if (input instanceof FileImageInputStreamExtImpl)
+       {
+          File file = ((FileImageInputStreamExtImpl) input).getFile ();
+          isDecodable = decoder.canDecode (file.getAbsolutePath ());
+       }
+       else
+       {
+          isDecodable = false;
+       }
+
+       return isDecodable;
     }
     /**
      * Upon registration, this method ensures that this SPI is listed at the top
