@@ -38,6 +38,34 @@
    <build>
       <plugins>
          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>1.4.1</version>
+            <executions>
+               <execution>
+                  <phase>validate</phase>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <requireProperty>
+                           <property>cmake.generator</property>
+                           <message>You must set your CMake Generator to compile via 'cmake.generator' property !</message>
+                           <!-- TODO set values in <regex></regex> -->
+                        </requireProperty>
+                        <requireProperty>
+                           <property>library.packaging</property>
+                           <message>Your system is not compatible with this project</message>
+                        </requireProperty>
+                     </rules>
+                     <fail>true</fail>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <plugin>
             <groupId>com.googlecode.cmake-maven-project</groupId>
             <artifactId>cmake-maven-plugin</artifactId>
             <version>2.8.11-b4</version>
@@ -50,7 +78,7 @@
                   <configuration>
                      <sourcePath>../../</sourcePath>
                      <targetPath>${project.build.directory}</targetPath>
-                     <generator>Unix Makefiles</generator>
+                     <generator>${cmake.generator}</generator>
                      <options>
                         <option>-DBUILD_SHARED_LIBS:bool=on</option>
                         <option>-DCMAKE_INSTALL_PREFIX=${basedir}/target</option>
@@ -90,7 +118,7 @@
                      <artifactId>libopenjp2</artifactId>
                      <version>${openjpeg.version}</version>
                      <classifier>${openjpeg.classifier}</classifier>
-                     <packaging>so</packaging>
+                     <packaging>${library.packaging}</packaging>
                   </configuration>
                </execution>
             </executions>
@@ -116,7 +144,7 @@
                      <artifactId>libopenjp2</artifactId>
                      <version>${openjpeg.version}</version>
                      <classifier>${openjpeg.classifier}</classifier>
-                     <packaging>so</packaging>
+                     <packaging>${library.packaging}</packaging>
                      <updateReleaseInfo>true</updateReleaseInfo>
                   </configuration>
                </execution>
@@ -125,4 +153,44 @@
       </plugins>
    </build>
 
+   <profiles>
+      <profile>
+         <id>unix-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>unix</family>
+            </os>
+         </activation>
+         <properties>
+            <library.packaging>so</library.packaging>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>windows-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>dos</family>
+            </os>
+         </activation>
+         <properties>
+            <library.packaging>dll</library.packaging>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>mac-os-x-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>mac</family>
+            </os>
+         </activation>
+         <properties>
+            <library.packaging>dylib</library.packaging>
+         </properties>
+      </profile>
+   </profiles>
 </project>
