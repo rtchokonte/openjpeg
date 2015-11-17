@@ -7,27 +7,27 @@
    
    <groupId>fr.gael.openjpeg</groupId>
    <artifactId>openjpeg-libraries</artifactId>
-   <version>0.0.1</version>
+   <version>0.1.0</version>
    <packaging>pom</packaging>
 
    <name>OpenJpeg Libraries</name>
    
    <properties>
       <project.build.directory>${basedir}/target</project.build.directory>
-      <openjpeg.classifier>${os.name}-${os.arch}</openjpeg.classifier>
       <openjpeg.version>2.1.0</openjpeg.version>
+      <settings.server.id>gael-main</settings.server.id>
    </properties>
    
    <distributionManagement>
       <repository>
-         <id>gael-main</id>
+         <id>${settings.server.id}</id>
          <name>GAEL Systems - Main Repository Releases</name>
          <uniqueVersion>true</uniqueVersion>
          <url>http://repository.gael.fr:8081/nexus/content/repositories/releases</url>
          <layout>default</layout>
       </repository>
       <snapshotRepository>
-         <id>gael-main</id>
+         <id>${settings.server.id}</id>
          <name>GAEL Systems - Main Repository Snapshot</name>
          <uniqueVersion>true</uniqueVersion>
          <url>http://repository.gael.fr:8081/nexus/content/repositories/snapshots</url>
@@ -52,11 +52,10 @@
                         <requireProperty>
                            <property>cmake.generator</property>
                            <message>You must set your CMake Generator to compile via 'cmake.generator' property !</message>
-                           <!-- TODO set values in <regex></regex> -->
                         </requireProperty>
                         <requireProperty>
-                           <property>library.packaging</property>
-                           <message>Your system is not compatible with this project</message>
+                           <property>cmake.generator</property>
+                           <message>You must set your CMake Generator to compile via 'cmake.generator' property !</message>
                         </requireProperty>
                      </rules>
                      <fail>true</fail>
@@ -64,7 +63,7 @@
                </execution>
             </executions>
          </plugin>
-
+         
          <plugin>
             <groupId>com.googlecode.cmake-maven-project</groupId>
             <artifactId>cmake-maven-plugin</artifactId>
@@ -97,34 +96,32 @@
                   </configuration>
                </execution>
             </executions>
-         </plugin>
-         
-         <!-- Install native libraries -->
+			</plugin>
+             
          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-install-plugin</artifactId>
-            <version>2.5.2</version>
-            <executions>
-               <execution>
-                  <id>install-libopenjpeg</id>
-                  <phase>install</phase>
-                  <goals>
-                     <goal>install-file</goal>
-                  </goals>
-                  <configuration>
-                     <file>${project.build.directory}/bin/libopenjp2.so</file>
-                     <repositoryLayout>default</repositoryLayout>
-                     <groupId>org.openJpeg</groupId>
-                     <artifactId>libopenjp2</artifactId>
-                     <version>${openjpeg.version}</version>
-                     <classifier>${openjpeg.classifier}</classifier>
-                     <packaging>${library.packaging}</packaging>
-                  </configuration>
-               </execution>
-            </executions>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-install-plugin</artifactId>
+               <version>2.5.2</version>
+               <executions>
+                  <execution>
+                     <id>install-libopenjpeg</id>
+                     <phase>install</phase>
+                     <goals>
+                        <goal>install-file</goal>
+                     </goals>
+                     <configuration>
+                        <file>${project.build.directory}/bin/libopenjp2.${openjpeg.packaging}</file>
+                        <repositoryLayout>default</repositoryLayout>
+                        <groupId>org.openJpeg</groupId>
+                        <artifactId>libopenjp2</artifactId>
+                        <version>${openjpeg.version}</version>
+                        <classifier>${openjpeg.classifier}</classifier>
+                        <packaging>${openjpeg.packaging}</packaging>
+                     </configuration>
+                  </execution>
+               </executions>
          </plugin>
-         
-         <!-- Deploy native libraries -->
+
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-deploy-plugin</artifactId>
@@ -137,14 +134,14 @@
                      <goal>deploy-file</goal>
                   </goals>
                   <configuration>
-                     <file>${project.build.directory}/bin/libopenjp2.so</file>
+                     <file>${project.build.directory}/bin/libopenjp2.${openjpeg.packaging}</file>
                      <url>http://repository.gael.fr:8081/nexus/content/repositories/releases</url>
-                     <repositoryId>gael-main</repositoryId> <!-- id server access - see your settings.xml -->
+                     <repositoryId>${settings.server.id}</repositoryId> <!-- id server access - see your settings.xml -->
                      <groupId>org.openJpeg</groupId>
                      <artifactId>libopenjp2</artifactId>
                      <version>${openjpeg.version}</version>
                      <classifier>${openjpeg.classifier}</classifier>
-                     <packaging>${library.packaging}</packaging>
+                     <packaging>${openjpeg.packaging}</packaging>
                      <updateReleaseInfo>true</updateReleaseInfo>
                   </configuration>
                </execution>
@@ -155,15 +152,16 @@
 
    <profiles>
       <profile>
-         <id>unix-libraries</id>
+         <id>linux-libraries</id>
          <activation>
             <activeByDefault>false</activeByDefault>
             <os>
-               <family>unix</family>
+               <name>Linux</name>
             </os>
          </activation>
          <properties>
-            <library.packaging>so</library.packaging>
+            <openjpeg.classifier>Linux-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>so</openjpeg.packaging>
          </properties>
       </profile>
 
@@ -176,7 +174,8 @@
             </os>
          </activation>
          <properties>
-            <library.packaging>dll</library.packaging>
+            <openjpeg.classifier>Windows-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>dll</openjpeg.packaging>
          </properties>
       </profile>
 
@@ -189,7 +188,8 @@
             </os>
          </activation>
          <properties>
-            <library.packaging>dylib</library.packaging>
+            <openjpeg.classifier>Mac-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>dylib</openjpeg.packaging>
          </properties>
       </profile>
    </profiles>
