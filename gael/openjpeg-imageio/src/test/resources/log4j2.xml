@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+ 	<Properties>
+		<Property name="pattern">[%-5p] %m (%file:%line - %t)%n%throwable </Property>
+	</Properties>
+	<Appenders>
+		<Console name="stdout" target="SYSTEM_OUT">
+			<PatternLayout pattern="${pattern}" />
+			<Filters>
+			    <ThresholdFilter level="DEBUG"/>
+			    <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
+			</Filters>
+		</Console>
+		<Console name="stderr" target="SYSTEM_ERR">
+			<PatternLayout pattern="${pattern}" />
+			<Filters>
+			    <ThresholdFilter level="WARN"/>
+			</Filters>
+		</Console>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="stderr" />
+			<AppenderRef ref="stdout" />
+		</Root>
+	</Loggers>
+</Configuration>

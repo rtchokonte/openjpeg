@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+   <modelVersion>4.0.0</modelVersion>
+
+   <name>GAEL Systems - OpenJpeg Native Library</name>
+
+   <parent>
+      <groupId>fr.gael.openjpeg</groupId>
+      <artifactId>openjpeg</artifactId>
+      <version>2.4.0</version>
+   </parent>
+
+   <artifactId>openjpeg-native</artifactId>
+   <packaging>pom</packaging>
+
+   <profiles>
+      <profile>
+         <id>linux-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <name>Linux</name>
+            </os>
+         </activation>
+         <properties>
+            <openjpeg.classifier>Linux-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>so</openjpeg.packaging>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>windows-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>dos</family>
+            </os>
+         </activation>
+         <properties>
+            <openjpeg.classifier>Windows-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>dll</openjpeg.packaging>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>mac-os-x-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>mac</family>
+            </os>
+         </activation>
+         <properties>
+            <openjpeg.classifier>Mac-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>dylib</openjpeg.packaging>
+         </properties>
+      </profile>
+   </profiles>
+
+   <properties>
+      <openjpeg.buildDir>${project.build.directory}/build</openjpeg.buildDir>
+      <cmake.generator>#undefined#</cmake.generator>
+   </properties>
+
+   <build>
+      <plugins>
+         <!-- check required properties -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>1.4.1</version>
+            <executions>
+               <execution>
+                  <id>check-cmake-properties</id>
+                  <phase>validate</phase>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <requireProperty>
+                           <property>cmake.generator</property>
+                           <message>Missing property: cmake.generator</message>
+                           <regex>Unix Makefiles|MSYS Makefiles|MinGW Makefiles</regex>
+                           <regexMessage>
+                              Invalid or unsupported cmake generator ! Only following generator are available:
+                              "Unix Makefiles", "MSYS Makefiles", "MinGW Makefiles"
+                           </regexMessage>
+                        </requireProperty>
+                     </rules>
+                     <fail>true</fail>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!-- build native library -->
+         <plugin>
+            <groupId>com.googlecode.cmake-maven-project</groupId>
+            <artifactId>cmake-maven-plugin</artifactId>
+            <version>3.4.1-b1</version>
+            <executions>
+               <execution>
+                  <id>cmake-generate</id>
+                  <goals>
+                     <goal>generate</goal>
+                  </goals>
+                  <configuration>
+                     <sourcePath>../..</sourcePath>
+                     <targetPath>${openjpeg.buildDir}</targetPath>
+                     <generator>${cmake.generator}</generator>
+                     <options>
+                        <option>-DCMAKE_BUILD_TYPE=Debug</option>
+                     </options>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>cmake-compile</id>
+                  <goals>
+                     <goal>compile</goal>
+                  </goals>
+                  <configuration>
+                     <projectDirectory>${openjpeg.buildDir}</projectDirectory>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!-- install openjpeg native library -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <version>2.5.2</version>
+            <executions>
+               <execution>
+                  <id>install-openjpeg-native-library</id>
+                  <phase>install</phase>
+                  <goals>
+                     <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                     <file>${openjpeg.buildDir}/bin/libopenjp2.${openjpeg.packaging}.${openjpeg.version}</file>
+                     <repositoryLayout>default</repositoryLayout>
+                     <groupId>fr.gael.openjpeg</groupId>
+                     <artifactId>openjpeg-native</artifactId>
+                     <version>${project.version}</version>
+                     <classifier>${openjpeg.classifier}</classifier>
+                     <packaging>${openjpeg.packaging}</packaging>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+
+         <!-- deploy openjpeg native library -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>2.8.2</version>
+            <executions>
+               <execution>
+                  <id>deploy-openjpeg-native-library</id>
+                  <phase>deploy</phase>
+                  <goals>
+                     <goal>deploy-file</goal>
+                  </goals>
+                  <configuration>
+                     <file>${openjpeg.buildDir}/bin/libopenjp2.${openjpeg.packaging}.${openjpeg.version}</file>
+                     <url>http://repository.gael.fr:8081/nexus/content/repositories/releases</url>
+                     <repositoryId>${gael.repo.auth}</repositoryId>
+                     <groupId>fr.gael.openjpeg</groupId>
+                     <artifactId>openjpeg-native</artifactId>
+                     <version>${project.version}</version>
+                     <classifier>${openjpeg.classifier}</classifier>
+                     <packaging>${openjpeg.packaging}</packaging>
+                     <updateReleaseInfo>true</updateReleaseInfo>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
+
+</project>

@@ -1,0 +1,19 @@
+#####################################################
+# OpenJPEG Library for DHuS
+#####################################################
+
+### Required maven properties:
+Definitions of required properties in different phases of maven build.
+   ### COMPILE
+      cmake.generator: specific generator used during native library compilation,
+         can takes this following values: "Unix Makefiles", "MSYS Makefiles" and
+         "MinGW Makefiles".
+
+   ### DEPLOY
+      gael.repo.auth: your server id defined in your maven settings, to access
+         to the GAEL Systems repository.
+
+### Examples
+   mvn clean package -Dcmake.generator="Unix Makefiles"
+   mvn clean install -Dcmake.generator="Unix Makefiles"
+   mvn clean deploy  -Dcmake.generator="Unix Makefiles" -Dgael.repo.auth="your-server-id"
