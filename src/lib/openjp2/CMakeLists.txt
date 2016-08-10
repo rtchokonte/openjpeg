@@ -6,6 +6,11 @@ install( FILES  ${CMAKE_CURRENT_BINARY_DIR}/opj_config.h
 
 include_directories(
   ${OPENJPEG_BINARY_DIR}/src/lib/openjp2 # opj_config.h and opj_config_private.h
+
+  ${OPENJPEG_SOURCE_DIR}/src/lib/openjp2
+  ${OPENJPEG_SOURCE_DIR}/src/bin/common
+  ${OPENJPEG_BINARY_DIR}/src/bin/common
+  ${OPENJPEG_SOURCE_DIR}/src/bin/jp2
 )
 # Defines the source code for the library
 set(OPENJPEG_SRCS
@@ -53,6 +58,11 @@ set(OPENJPEG_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/opj_malloc.c
   ${CMAKE_CURRENT_SOURCE_DIR}/opj_malloc.h
   ${CMAKE_CURRENT_SOURCE_DIR}/opj_stdint.h
+
+  ${OPENJPEG_SOURCE_DIR}/src/bin/common/opj_getopt.c
+  ${OPENJPEG_SOURCE_DIR}/src/bin/jp2/convert.c
+  ${OPENJPEG_SOURCE_DIR}/wrapping/java/gael/index.c
+  ${OPENJPEG_SOURCE_DIR}/wrapping/java/gael/JavaOpenJpegDecoder.c
 )
 if(BUILD_JPIP)
   add_definitions(-DUSE_JPIP)
