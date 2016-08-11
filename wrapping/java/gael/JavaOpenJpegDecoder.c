@@ -520,9 +520,6 @@ JNIEXPORT jboolean JNICALL Java_fr_gael_openjpeg_OpenJpegDecoder_internalOpenJpe
    destroy_parameters(&params);
 
    set_image_properties(env, class, obj, image);
-   fprintf(stderr, "image depth = %d\n", image->comps->bpp);
-   fprintf(stderr, "image precision = %d\n", image->comps->prec);
-   fprintf(stderr, "image numComp = %d\n", image->numcomps);
 
    // free image resource
    opj_image_destroy(image);   

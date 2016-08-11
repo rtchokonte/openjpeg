@@ -6,7 +6,7 @@
 Definitions of required properties in different phases of maven build.
    ### COMPILE
       cmake.generator: specific generator used during native library compilation,
-         can takes this following values: "Unix Makefiles", "MSYS Makefiles" and
+         can take this following values: "Unix Makefiles", "MSYS Makefiles" and
          "MinGW Makefiles".
 
    ### DEPLOY
