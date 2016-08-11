@@ -283,6 +283,7 @@ static void fill_image_24_java_buffer(JNIEnv* env, jobject obj, opj_image_t* ima
    jboolean is_copy = JNI_FALSE;
    jintArray image_obj;
    jint* buffer;
+   jint* array_elem;
    jclass class = get_object_class(env, obj);
    jfieldID fid;
    jmethodID method_id;
@@ -301,9 +302,10 @@ static void fill_image_24_java_buffer(JNIEnv* env, jobject obj, opj_image_t* ima
    fid = (*env)->GetFieldID(env, class, "image24", "[I");
    image_obj = (*env)->GetObjectField(env, obj, fid);
    length = (*env)->GetArrayLength(env, image_obj);
-   buffer = (*env)->GetIntArrayElements(env, image_obj, &is_copy);
+   array_elem = (*env)->GetIntArrayElements(env, image_obj, &is_copy);
 
    // fill Java image buffer
+   buffer = array_elem;
    for(i = 0; i < length; i++)
    {
       rc = (unsigned char) *red++;
@@ -316,17 +318,18 @@ static void fill_image_24_java_buffer(JNIEnv* env, jobject obj, opj_image_t* ima
    }
 
    // release Java image buffer
-   (*env)->ReleaseIntArrayElements(env, image_obj, buffer, 0);
+   (*env)->ReleaseIntArrayElements(env, image_obj, array_elem, 0);
 }
 
 static void fill_image_16_java_buffer(JNIEnv* env, jobject obj, opj_image_t* image)
 {
-   size_t length;
+   int length;
    int i;
    int* grey_color;
    jboolean is_copy = JNI_FALSE;
    jshortArray image_obj;
    jshort* buffer;
+   jshort* array_elem;
    jclass class = get_object_class(env, obj);
    jfieldID fid;
    jmethodID method_id;
@@ -342,16 +345,17 @@ static void fill_image_16_java_buffer(JNIEnv* env, jobject obj, opj_image_t* ima
    fid = (*env)->GetFieldID(env, class, "image16", "[S");
    image_obj = (*env)->GetObjectField(env, obj, fid);
    length = (*env)->GetArrayLength(env, image_obj);
-   buffer = (*env)->GetShortArrayElements(env, image_obj, &is_copy);
+   array_elem = (*env)->GetShortArrayElements(env, image_obj, &is_copy);
 
    // fill Java image buffer
+   buffer = array_elem;
    for(i = 0; i < length; i++)
    {
-      *buffer++ = *grey_color++;
+      *buffer++ = (short) grey_color[i];
    }
 
    // release Java image buffer
-   (*env)->ReleaseShortArrayElements(env, image_obj, buffer, 0);
+   (*env)->ReleaseShortArrayElements(env, image_obj, array_elem, 0);
 }
 
 static void fill_image_8_java_buffer(JNIEnv* env, jobject obj, opj_image_t* image)
@@ -362,6 +366,7 @@ static void fill_image_8_java_buffer(JNIEnv* env, jobject obj, opj_image_t* imag
    jboolean is_copy = JNI_FALSE;
    jbyteArray image_obj;
    jbyte* buffer;
+   jbyte* array_elem;
    jclass class = get_object_class(env, obj);
    jfieldID fid;
    jmethodID method_id;
@@ -377,16 +382,17 @@ static void fill_image_8_java_buffer(JNIEnv* env, jobject obj, opj_image_t* imag
    fid = (*env)->GetFieldID(env, class, "image8", "[B");
    image_obj = (*env)->GetObjectField(env, obj, fid);
    length = (*env)->GetArrayLength(env, image_obj);
-   buffer = (*env)->GetByteArrayElements(env, image_obj, &is_copy);
+   array_elem = (*env)->GetByteArrayElements(env, image_obj, &is_copy);
 
    // fill Java image buffer
+   buffer = array_elem;
    for(i = 0; i < length; i++)
    {
-      *buffer++ = *grey_color++;
+      *buffer++ = (unsigned char) grey_color[i];
    }
 
    // release Java image buffer
-   (*env)->ReleaseByteArrayElements(env, image_obj, buffer, 0);
+   (*env)->ReleaseByteArrayElements(env, image_obj, array_elem, 0);
 }
 
 /******************************************************************************/
@@ -610,6 +616,8 @@ JNIEXPORT jboolean JNICALL Java_fr_gael_openjpeg_OpenJpegDecoder_internalOpenJpe
    (*env)->ReleaseByteArrayElements(env, array_source, source, 0);
    opj_destroy_codec(codec);
    destroy_parameters(&params);
+
+   set_image_properties(env, class, obj, image);
    
    // check YUV color space format
    if (image->color_space != OPJ_CLRSPC_SYCC && image->numcomps == 3 &&

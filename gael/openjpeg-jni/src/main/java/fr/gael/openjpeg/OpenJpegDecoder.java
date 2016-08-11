@@ -197,8 +197,8 @@ public class OpenJpegDecoder
    protected void alloc8 ()
    {
       int length = width * height;
-      if (((image8 == null) || (image8.length != length))
-            && (getDepth () == 1))
+
+      if ((image8 == null || image8.length != length) && getDepth () == 1)
       {
          image8 = new byte[length];
       }
@@ -210,8 +210,8 @@ public class OpenJpegDecoder
    protected void alloc16 ()
    {
       int length = width * height;
-      if (((image16 == null) || (image16.length != length))
-            && (getDepth () == 2))
+
+      if ((image16 == null || image16.length != length) && getDepth () == 2)
       {
          image16 = new short[length];
       }
@@ -223,8 +223,8 @@ public class OpenJpegDecoder
    protected void alloc24 ()
    {
       int length = width * height;
-      if (((image24 == null) || (image24.length != length))
-            && (getDepth () == 3))
+
+      if ((image24 == null || image24.length != length) && getDepth () == 3)
       {
          image24 = new int[length];
       }

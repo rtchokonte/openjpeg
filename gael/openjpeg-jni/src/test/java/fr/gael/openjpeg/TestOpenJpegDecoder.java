@@ -110,4 +110,11 @@ public class TestOpenJpegDecoder
       Assert.assertEquals (decoder.getWidth (), 1830);
       Assert.assertEquals (decoder.getHeight (), 1830);
    }
+
+   @Test
+   public void testDecode ()
+   {
+      OpenJpegDecoder decoder = new OpenJpegDecoder ();
+      decoder.decode (workingFile);
+   }
 }
