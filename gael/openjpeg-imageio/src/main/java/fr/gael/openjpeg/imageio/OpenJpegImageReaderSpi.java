@@ -121,70 +121,26 @@ public class OpenJpegImageReaderSpi extends ImageReaderSpi
    public synchronized void onRegistration (ServiceRegistry registry,
          Class category)
    {
+      super.onRegistration (registry, category);
+
       if (isResgistered)
       {
          return;
       }
       isResgistered = true;
-      final IIORegistry iioRegistry = (IIORegistry) registry;
-      final Class<ImageReaderSpi> spiClass = ImageReaderSpi.class;
-      final Iterator<ImageReaderSpi> it =
-            iioRegistry.getServiceProviders (spiClass, true);
-
-      final List<ImageReaderWriterSpi> readers = getJDKImageReaderWriterSPI (
-            registry, NAMES[0], true);
-      for (ImageReaderWriterSpi elem : readers)
-      {
-         if (elem instanceof ImageReaderSpi)
-         {
-            final ImageReaderSpi spi = (ImageReaderSpi) elem;
-            if (spi == this)
-            {
-               continue;
-            }
-            registry.deregisterServiceProvider (spi);
-            registry.setOrdering (category, this, spi);
-         }
-
-      }
-   }
-
-   private List<ImageReaderWriterSpi> getJDKImageReaderWriterSPI (
-         ServiceRegistry registry, String formatName, boolean isReader)
-   {
-
-      if (registry == null || !(registry instanceof IIORegistry))
-      {
-         throw new IllegalArgumentException ("Illegal registry provided");
-      }
 
       IIORegistry iioRegistry = (IIORegistry) registry;
-      Class<? extends ImageReaderWriterSpi> spiClass;
-      if (isReader)
-      {
-         spiClass = ImageReaderSpi.class;
-      }
-      else
-      {
-         spiClass = ImageWriterSpi.class;
-      }
+      Class<ImageReaderSpi> spiClass = ImageReaderSpi.class;
+      Iterator<ImageReaderSpi> it =
+            iioRegistry.getServiceProviders (spiClass, true);
 
-      final Iterator<? extends ImageReaderWriterSpi> iter = iioRegistry
-            .getServiceProviders (spiClass, true); // useOrdering
-      final ArrayList<ImageReaderWriterSpi> list = new ArrayList<> ();
-      while (iter.hasNext ())
+      while (it.hasNext ())
       {
-         final ImageReaderWriterSpi provider = iter.next ();
-         final String[] formatNames = provider.getFormatNames ();
-         for (int i = 0; i < formatNames.length; i++)
+         ImageReaderSpi provider = it.next ();
+         if (provider instanceof OpenJpegImageReaderSpi)
          {
-            if (formatNames[i].equalsIgnoreCase (formatName))
-            {
-               list.add (provider);
-               break;
-            }
+            registry.deregisterServiceProvider (provider);
          }
       }
-      return list;
    }
 }

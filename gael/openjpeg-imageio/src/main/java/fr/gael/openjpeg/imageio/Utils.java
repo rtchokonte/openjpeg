@@ -1,5 +1,6 @@
 package fr.gael.openjpeg.imageio;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import javax.imageio.stream.ImageInputStream;
@@ -20,23 +21,18 @@ public class Utils
    public static byte[] imageInputStreamToByteArray (ImageInputStream iis)
          throws IOException
    {
-      if (iis.length () > Integer.MAX_VALUE)
-      {
-         throw new IOException ("Stream too large");
-      }
-
-      byte[] result = new byte[(int) iis.length ()];
+      int read;
       byte[] buffer = new byte[BUFFER_SIZE];
-      int bytesRead;
-      int offset = 0;
+      ByteArrayOutputStream baos = new ByteArrayOutputStream ();
 
-      while ((bytesRead = iis.read (buffer, 0, BUFFER_SIZE)) != -1)
+      while ((read = iis.read (buffer, 0, BUFFER_SIZE)) != -1)
       {
-         System.arraycopy (buffer, 0, result, offset, bytesRead);
-         offset = offset + bytesRead;
+         baos.write (buffer, 0, read);
       }
 
-      return result;
+      iis.close ();
+
+      return baos.toByteArray ();
    }
 
    private Utils ()
