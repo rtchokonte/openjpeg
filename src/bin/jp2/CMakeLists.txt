@@ -11,8 +11,9 @@ set(common_SRCS
   ${OPENJPEG_SOURCE_DIR}/src/bin/common/color.h
   ${OPENJPEG_SOURCE_DIR}/src/bin/common/opj_getopt.c
   ${OPENJPEG_SOURCE_DIR}/src/bin/common/opj_getopt.h
+  ${OPENJPEG_SOURCE_DIR}/src/bin/common/opj_string.h
   )
-  
+
 if(OPJ_HAVE_LIBTIFF)
 	list(APPEND common_SRCS converttif.c)
 endif()
@@ -63,7 +64,7 @@ foreach(exe opj_decompress opj_compress opj_dump)
     DESTINATION ${OPENJPEG_INSTALL_BIN_DIR} COMPONENT Applications
   )
   if(OPJ_USE_DSYMUTIL)
-    add_custom_command(TARGET ${exe} POST_BUILD 
+    add_custom_command(TARGET ${exe} POST_BUILD
     COMMAND "dsymutil" "$<TARGET_FILE:${exe}>"
     COMMENT "dsymutil $<TARGET_FILE:${exe}>"
     DEPENDS ${exe})

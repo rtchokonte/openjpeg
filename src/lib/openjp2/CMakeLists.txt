@@ -4,8 +4,17 @@ include_regular_expression("^.*$")
 install( FILES  ${CMAKE_CURRENT_BINARY_DIR}/opj_config.h
  DESTINATION ${OPENJPEG_INSTALL_INCLUDE_DIR} COMPONENT Headers)
 
+# JNI binding
+find_package(JNI REQUIRED)
+include_directories(${JNI_INCLUDE_DIRS})
+
 include_directories(
   ${OPENJPEG_BINARY_DIR}/src/lib/openjp2 # opj_config.h and opj_config_private.h
+
+  ${OPENJPEG_SOURCE_DIR}/src/lib/openjp2
+  ${OPENJPEG_SOURCE_DIR}/src/bin/common
+  ${OPENJPEG_BINARY_DIR}/src/bin/common
+  ${OPENJPEG_SOURCE_DIR}/src/bin/jp2
 )
 # Defines the source code for the library
 set(OPENJPEG_SRCS
@@ -50,8 +59,14 @@ set(OPENJPEG_SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/opj_codec.h
   ${CMAKE_CURRENT_SOURCE_DIR}/opj_includes.h
   ${CMAKE_CURRENT_SOURCE_DIR}/opj_intmath.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/opj_malloc.c
   ${CMAKE_CURRENT_SOURCE_DIR}/opj_malloc.h
   ${CMAKE_CURRENT_SOURCE_DIR}/opj_stdint.h
+
+  ${OPENJPEG_SOURCE_DIR}/src/bin/common/opj_getopt.c
+  ${OPENJPEG_SOURCE_DIR}/src/bin/jp2/convert.c
+  ${OPENJPEG_SOURCE_DIR}/wrapping/java/gael/index.c
+  ${OPENJPEG_SOURCE_DIR}/wrapping/java/gael/JavaOpenJpegDecoder.c
 )
 if(BUILD_JPIP)
   add_definitions(-DUSE_JPIP)
@@ -85,7 +100,9 @@ if(UNIX)
   target_link_libraries(${OPENJPEG_LIBRARY_NAME} m)
 endif()
 set_target_properties(${OPENJPEG_LIBRARY_NAME} PROPERTIES ${OPENJPEG_LIBRARY_PROPERTIES})
-target_compile_options(${OPENJPEG_LIBRARY_NAME} PRIVATE ${OPENJPEG_LIBRARY_COMPILE_OPTIONS})
+if(${CMAKE_VERSION} VERSION_GREATER "2.8.11")
+  target_compile_options(${OPENJPEG_LIBRARY_NAME} PRIVATE ${OPENJPEG_LIBRARY_COMPILE_OPTIONS})
+endif()
 
 # Install library
 install(TARGETS ${OPENJPEG_LIBRARY_NAME}
@@ -133,7 +150,7 @@ endif()
 
 if(OPJ_USE_DSYMUTIL)
   if(BUILD_SHARED_LIBS)
-    add_custom_command(TARGET ${OPENJPEG_LIBRARY_NAME} POST_BUILD 
+    add_custom_command(TARGET ${OPENJPEG_LIBRARY_NAME} POST_BUILD
     COMMAND "dsymutil" "$<TARGET_SONAME_FILE:${OPENJPEG_LIBRARY_NAME}>"
     COMMENT "dsymutil $<TARGET_SONAME_FILE:${OPENJPEG_LIBRARY_NAME}>"
     DEPENDS ${OPENJPEG_LIBRARY_NAME})

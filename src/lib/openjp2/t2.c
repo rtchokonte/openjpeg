@@ -868,9 +868,14 @@ static OPJ_BOOL opj_t2_read_packet_header( opj_t2_t* p_t2,
 
                 /* reset tagtrees */
                 for (bandno = 0; bandno < l_res->numbands; ++bandno) {
-                        opj_tcd_precinct_t *l_prc = &l_band->precincts[p_pi->precno];
-
                         if ( ! ((l_band->x1-l_band->x0 == 0)||(l_band->y1-l_band->y0 == 0)) ) {
+                                opj_tcd_precinct_t *l_prc = &l_band->precincts[p_pi->precno];
+                                if (!(p_pi->precno < (l_band->precincts_data_size / sizeof(opj_tcd_precinct_t)))) {
+                                        opj_event_msg(p_manager, EVT_ERROR, "Invalid precinct\n");
+                                        return OPJ_FALSE;
+                                }
+													
+													
                                 opj_tgt_reset(l_prc->incltree);
                                 opj_tgt_reset(l_prc->imsbtree);
                                 l_cblk = l_prc->cblks.dec;
@@ -1338,7 +1343,7 @@ static OPJ_BOOL opj_t2_skip_packet_data(   opj_t2_t* p_t2,
 }
 
 
-OPJ_BOOL opj_t2_init_seg(   opj_tcd_cblk_dec_t* cblk,
+static OPJ_BOOL opj_t2_init_seg(   opj_tcd_cblk_dec_t* cblk,
                             OPJ_UINT32 index, 
                             OPJ_UINT32 cblksty, 
                             OPJ_UINT32 first)

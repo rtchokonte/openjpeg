@@ -94,7 +94,7 @@ static OPJ_BYTE * opj_jp2_write_bpcc(	opj_jp2_t *jp2,
  * @param	p_bpc_header_size			the size of the bpc header
  * @param	p_manager					the user event manager.
  *
- * @return	true if the bpc header is valid, fale else.
+ * @return	true if the bpc header is valid, false else.
  */
 static OPJ_BOOL opj_jp2_read_bpcc(  opj_jp2_t *jp2,
                                     OPJ_BYTE * p_bpc_header_data,
@@ -170,7 +170,7 @@ static OPJ_BOOL opj_jp2_skip_jp2c(	opj_jp2_t *jp2,
  * @param	p_header_size	the size of the data contained in the file header box.
  * @param	p_manager		the user event manager.
  *
- * @return true if the JP2 Header box was successfully reconized.
+ * @return true if the JP2 Header box was successfully recognized.
 */
 static OPJ_BOOL opj_jp2_read_jp2h(  opj_jp2_t *jp2,
                                     OPJ_BYTE *p_header_data,
@@ -311,7 +311,7 @@ static OPJ_BOOL opj_jp2_read_cmap(	opj_jp2_t * jp2,
  * @param	p_colr_header_size			the size of the color header
  * @param	p_manager					the user event manager.
  *
- * @return	true if the bpc header is valid, fale else.
+ * @return	true if the bpc header is valid, false else.
 */
 static OPJ_BOOL opj_jp2_read_colr(  opj_jp2_t *jp2,
                                     OPJ_BYTE * p_colr_header_data,
@@ -370,7 +370,7 @@ static OPJ_BOOL opj_jp2_exec (  opj_jp2_t * jp2,
  * @param	p_number_bytes_read		pointer to an int that will store the number of bytes read from the stream (shoul usually be 2).
  * @param	p_manager				user event manager.
  *
- * @return	true if the box is reconized, false otherwise
+ * @return	true if the box is recognized, false otherwise
 */
 static OPJ_BOOL opj_jp2_read_boxhdr(opj_jp2_box_t *box,
                                     OPJ_UINT32 * p_number_bytes_read,
@@ -437,7 +437,7 @@ static const opj_jp2_header_handler_t jp2_img_header [] =
  * @param	p_box_max_size			the maximum number of bytes in the box.
  * @param	p_manager         FIXME DOC
  *
- * @return	true if the box is reconized, false otherwise
+ * @return	true if the box is recognized, false otherwise
 */
 static OPJ_BOOL opj_jp2_read_boxhdr_char(   opj_jp2_box_t *box,
                                             OPJ_BYTE * p_data,
@@ -482,12 +482,16 @@ static OPJ_BOOL opj_jp2_read_boxhdr(opj_jp2_box_t *box,
 	opj_read_bytes(l_data_header+4,&(box->type), 4);
     
   if(box->length == 0)/* last box */
-    {
+  {
     const OPJ_OFF_T bleft = opj_stream_get_number_byte_left(cio);
-    box->length = (OPJ_UINT32)bleft;
-    assert( (OPJ_OFF_T)box->length == bleft );
-    return OPJ_TRUE;
+    if (bleft > (OPJ_OFF_T)(0xFFFFFFFFU - 8U)) {
+      opj_event_msg(p_manager, EVT_ERROR, "Cannot handle box sizes higher than 2^32\n");
+      return OPJ_FALSE;
     }
+    box->length = (OPJ_UINT32)bleft + 8U;
+    assert( (OPJ_OFF_T)box->length == bleft + 8 );
+    return OPJ_TRUE;
+  }
 
 	/* do we have a "special very large box ?" */
 	/* read then the XLBox */
@@ -642,12 +646,13 @@ static OPJ_BYTE * opj_jp2_write_bpcc(	opj_jp2_t *jp2,
 {
 	OPJ_UINT32 i;
 	/* room for 8 bytes for box and 1 byte for each component */
-	OPJ_UINT32 l_bpcc_size = 8 + jp2->numcomps;
+	OPJ_UINT32 l_bpcc_size;
 	OPJ_BYTE * l_bpcc_data,* l_current_bpcc_ptr;
 	
 	/* preconditions */
 	assert(jp2 != 00);
 	assert(p_nb_bytes_written != 00);
+	l_bpcc_size = 8 + jp2->numcomps;
 
 	l_bpcc_data = (OPJ_BYTE *) opj_calloc(1,l_bpcc_size);
 	if (l_bpcc_data == 00) {
@@ -889,7 +894,7 @@ static OPJ_BOOL opj_jp2_check_color(opj_image_t *image, opj_jp2_color_t *color, 
 			}
 		}
 
-		pcol_usage = opj_calloc(nr_channels, sizeof(OPJ_BOOL));
+		pcol_usage = (OPJ_BOOL *) opj_calloc(nr_channels, sizeof(OPJ_BOOL));
 		if (!pcol_usage) {
 			opj_event_msg(p_manager, EVT_ERROR, "Unexpected OOM.\n");
 			return OPJ_FALSE;
@@ -1400,6 +1405,10 @@ static OPJ_BOOL opj_jp2_read_colr( opj_jp2_t *jp2,
 			OPJ_UINT32 rl, ol, ra, oa, rb, ob, il;
 
 			cielab = (OPJ_UINT32*)opj_malloc(9 * sizeof(OPJ_UINT32));
+			if(cielab == NULL){
+				opj_event_msg(p_manager, EVT_ERROR, "Not enough memory for cielab\n");
+				return OPJ_FALSE;
+			}
 			cielab[0] = 14; /* enumcs */
 			
 			/* default values */
@@ -1635,7 +1644,7 @@ static OPJ_BOOL opj_jp2_write_ftyp(opj_jp2_t *jp2,
 							opj_event_mgr_t * p_manager )
 {
 	OPJ_UINT32 i;
-	OPJ_UINT32 l_ftyp_size = 16 + 4 * jp2->numcl;
+	OPJ_UINT32 l_ftyp_size;
 	OPJ_BYTE * l_ftyp_data, * l_current_data_ptr;
 	OPJ_BOOL l_result;
 
@@ -1643,6 +1652,7 @@ static OPJ_BOOL opj_jp2_write_ftyp(opj_jp2_t *jp2,
 	assert(cio != 00);
 	assert(jp2 != 00);
 	assert(p_manager != 00);
+	l_ftyp_size = 16 + 4 * jp2->numcl;
 
 	l_ftyp_data = (OPJ_BYTE *) opj_calloc(1,l_ftyp_size);
 	
@@ -2112,7 +2122,7 @@ static OPJ_BOOL opj_jp2_read_header_procedure(  opj_jp2_t *jp2,
 		if (box.type == JP2_JP2C) {
 			if (jp2->jp2_state & JP2_STATE_HEADER) {
 				jp2->jp2_state |= JP2_STATE_CODESTREAM;
-                                opj_free(l_current_data);
+				opj_free(l_current_data);
 				return OPJ_TRUE;
 			}
 			else {
@@ -2127,7 +2137,7 @@ static OPJ_BOOL opj_jp2_read_header_procedure(  opj_jp2_t *jp2,
 			return OPJ_FALSE;
 		}
 		/* testcase 1851.pdf.SIGSEGV.ce9.948 */
-        else if (box.length < l_nb_bytes_read) {
+		else if (box.length < l_nb_bytes_read) {
 			opj_event_msg(p_manager, EVT_ERROR, "invalid box size %d (%x)\n", box.length, box.type);
 			opj_free(l_current_data);
 			return OPJ_FALSE;
@@ -2184,16 +2194,16 @@ static OPJ_BOOL opj_jp2_read_header_procedure(  opj_jp2_t *jp2,
 			}
 		}
 		else {
-            if (!(jp2->jp2_state & JP2_STATE_SIGNATURE)) {
-                opj_event_msg(p_manager, EVT_ERROR, "Malformed JP2 file format: first box must be JPEG 2000 signature box\n");
-                opj_free(l_current_data);
-                return OPJ_FALSE;
-            }
-            if (!(jp2->jp2_state & JP2_STATE_FILE_TYPE)) {
-                opj_event_msg(p_manager, EVT_ERROR, "Malformed JP2 file format: second box must be file type box\n");
-                opj_free(l_current_data);
-                return OPJ_FALSE;
-            }
+			if (!(jp2->jp2_state & JP2_STATE_SIGNATURE)) {
+				opj_event_msg(p_manager, EVT_ERROR, "Malformed JP2 file format: first box must be JPEG 2000 signature box\n");
+				opj_free(l_current_data);
+				return OPJ_FALSE;
+			}
+			if (!(jp2->jp2_state & JP2_STATE_FILE_TYPE)) {
+				opj_event_msg(p_manager, EVT_ERROR, "Malformed JP2 file format: second box must be file type box\n");
+				opj_free(l_current_data);
+				return OPJ_FALSE;
+			}
 			jp2->jp2_state |= JP2_STATE_UNKNOWN;
 			if (opj_stream_skip(stream,l_current_data_size,p_manager) != l_current_data_size) {
 				opj_event_msg(p_manager, EVT_ERROR, "Problem with skipping JPEG2000 box, stream error\n");
@@ -2474,7 +2484,7 @@ static OPJ_BOOL opj_jpip_skip_iptr(	opj_jp2_t *jp2,
  * @param	p_header_size	the size of the data contained in the file header box.
  * @param	p_manager		the user event manager.
  *
- * @return true if the JP2 Header box was successfully reconized.
+ * @return true if the JP2 Header box was successfully recognized.
 */
 static OPJ_BOOL opj_jp2_read_jp2h(  opj_jp2_t *jp2,
                                     OPJ_BYTE *p_header_data,

@@ -185,9 +185,17 @@ opj_image_t *pngtoimage(const char *read_idf, opj_cparameters_t * params)
 
 	
 	rows = (OPJ_BYTE**)calloc(height+1, sizeof(OPJ_BYTE*));
-	for(i = 0; i < height; ++i)
+	if(rows == NULL){
+		fprintf(stderr, "pngtoimage: memory out\n");
+		goto fin;
+	}
+	for(i = 0; i < height; ++i){
 		rows[i] = (OPJ_BYTE*)malloc(png_get_rowbytes(png,info));
-	
+		if(rows[i] == NULL){
+			fprintf(stderr,"pngtoimage: memory out\n");
+			goto fin;
+		}
+	}	
 	png_read_image(png, rows);
 	
 	/* Create image */
@@ -211,7 +219,7 @@ opj_image_t *pngtoimage(const char *read_idf, opj_cparameters_t * params)
 	image->x1 = (OPJ_UINT32)(image->x0 + (width  - 1) * (OPJ_UINT32)params->subsampling_dx + 1 + image->x0);
 	image->y1 = (OPJ_UINT32)(image->y0 + (height - 1) * (OPJ_UINT32)params->subsampling_dy + 1 + image->y0);
 	
-	row32s = malloc((size_t)width * nr_comp * sizeof(OPJ_INT32));
+	row32s = (OPJ_INT32 *)malloc((size_t)width * nr_comp * sizeof(OPJ_INT32));
 	if(row32s == NULL) goto fin;
 	
 	/* Set alpha channel */
@@ -235,7 +243,7 @@ fin:
 	if(rows)
 	{
 		for(i = 0; i < height; ++i)
-			free(rows[i]);
+			if(rows[i]) free(rows[i]);
 		free(rows);
 	}
 	if (row32s) {
@@ -486,7 +494,7 @@ fin:
 	}
 	fclose(writer);
 	
-	if(fails) remove(write_idf);
+	if(fails) (void)remove(write_idf); /* ignore return value */
 	
 	return fails;
 }/* imagetopng() */

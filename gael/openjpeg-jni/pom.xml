@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+   <modelVersion>4.0.0</modelVersion>
+
+   <name>GAEL Systems - OpenJpeg JNI</name>
+
+   <parent>
+      <groupId>fr.gael.openjpeg</groupId>
+      <artifactId>openjpeg</artifactId>
+      <version>2.4.0</version>
+   </parent>
+
+   <artifactId>openjpeg-jni</artifactId>
+   <packaging>jar</packaging>
+
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <maven.compiler.source>1.7</maven.compiler.source>
+      <maven.compiler.target>1.7</maven.compiler.target>
+      <log4j.version>2.1</log4j.version>
+   </properties>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.apache.logging.log4j</groupId>
+         <artifactId>log4j-1.2-api</artifactId>
+         <version>${log4j.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.testng</groupId>
+         <artifactId>testng</artifactId>
+         <version>6.8.13</version>
+      </dependency>
+   </dependencies>
+
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.10</version>
+            <executions>
+               <execution>
+                  <id>copy-openjpeg-native-lib</id>
+                  <phase>generate-test-resources</phase>
+                  <goals>
+                     <goal>copy</goal>
+                  </goals>
+                  <configuration>
+                     <artifactItems>
+                        <artifactItem>
+                           <groupId>fr.gael.openjpeg</groupId>
+                           <artifactId>openjpeg-native</artifactId>
+                           <version>${project.version}</version>
+                           <classifier>${openjpeg.classifier}</classifier>
+                           <type>${openjpeg.packaging}</type>
+                           <overWrite>true</overWrite>
+                           <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                           <destFileName>libopenjp2.${openjpeg.packaging}</destFileName>
+                        </artifactItem>
+                     </artifactItems>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
+
+   <profiles>
+      <profile>
+         <id>linux-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <name>Linux</name>
+            </os>
+         </activation>
+         <properties>
+            <openjpeg.classifier>Linux-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>so</openjpeg.packaging>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>windows-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>dos</family>
+            </os>
+         </activation>
+         <properties>
+            <openjpeg.classifier>Windows-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>dll</openjpeg.packaging>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>mac-os-x-libraries</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+            <os>
+               <family>mac</family>
+            </os>
+         </activation>
+         <properties>
+            <openjpeg.classifier>Mac-${os.arch}</openjpeg.classifier>
+            <openjpeg.packaging>dylib</openjpeg.packaging>
+         </properties>
+      </profile>
+   </profiles>
+
+</project>

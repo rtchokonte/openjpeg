@@ -181,7 +181,7 @@ static void bmpmask32toimage(const OPJ_UINT8* pData, OPJ_UINT32 stride, opj_imag
 	OPJ_UINT32 width, height;
 	OPJ_UINT32 x, y;
 	const OPJ_UINT8 *pSrc = NULL;
-	OPJ_BOOL hasAlpha = OPJ_FALSE;
+	OPJ_BOOL hasAlpha;
 	OPJ_UINT32 redShift,   redPrec;
 	OPJ_UINT32 greenShift, greenPrec;
 	OPJ_UINT32 blueShift,  bluePrec;
@@ -239,7 +239,7 @@ static void bmpmask16toimage(const OPJ_UINT8* pData, OPJ_UINT32 stride, opj_imag
 	OPJ_UINT32 width, height;
 	OPJ_UINT32 x, y;
 	const OPJ_UINT8 *pSrc = NULL;
-	OPJ_BOOL hasAlpha = OPJ_FALSE;
+	OPJ_BOOL hasAlpha;
 	OPJ_UINT32 redShift,   redPrec;
 	OPJ_UINT32 greenShift, greenPrec;
 	OPJ_UINT32 blueShift,  bluePrec;
@@ -572,7 +572,7 @@ static OPJ_BOOL bmp_read_rle4_data(FILE* IN, OPJ_UINT8* pData, OPJ_UINT32 stride
 			OPJ_UINT8 c1 = (OPJ_UINT8)getc(IN);
 		
 			for (j = 0; (j < c) && (x < width) && ((OPJ_SIZE_T)pix < (OPJ_SIZE_T)beyond); j++, x++, pix++) {
-				*pix = (j&1) ? (c1 & 0x0f) : ((c1>>4)&0x0f);
+				*pix = (OPJ_UINT8)((j&1) ? (c1 & 0x0fU) : ((c1>>4)&0x0fU));
 			}
 		}
 		else { /* absolute mode */
@@ -598,7 +598,7 @@ static OPJ_BOOL bmp_read_rle4_data(FILE* IN, OPJ_UINT8* pData, OPJ_UINT32 stride
 					if((j&1) == 0) {
 							c1 = (OPJ_UINT8)getc(IN);
 					}
-					*pix = (j&1) ? (c1 & 0x0f) : ((c1>>4)&0x0f);
+					*pix =  (OPJ_UINT8)((j&1) ? (c1 & 0x0fU) : ((c1>>4)&0x0fU));
 				}
 				if(((c&3) == 1) || ((c&3) == 2)) { /* skip padding byte */
 						getc(IN);
@@ -729,6 +729,7 @@ opj_image_t* bmptoimage(const char *filename, opj_cparameters_t *parameters)
 	image = opj_image_create(numcmpts, &cmptparm[0], (numcmpts == 1U) ? OPJ_CLRSPC_GRAY : OPJ_CLRSPC_SRGB);
 	if(!image) {
 		fclose(IN);
+		free(pData);
 		return NULL;
 	}
 	if (numcmpts == 4U) {
@@ -890,7 +891,7 @@ int imagetobmp(opj_image_t * image, const char *outfile) {
             fprintf(fdest, "%c%c%c", bc, gc, rc);
 
             if ((i + 1) % w == 0) {
-                for (pad = (3 * w) % 4 ? 4 - (3 * w) % 4 : 0; pad > 0; pad--)	/* ADD */
+                for (pad = ((3 * w) % 4) ? (4 - (3 * w) % 4) : 0; pad > 0; pad--)	/* ADD */
                     fprintf(fdest, "%c", 0);
             }
         }
@@ -902,6 +903,10 @@ int imagetobmp(opj_image_t * image, const char *outfile) {
         <<-- <<-- <<-- <<-- */
 
         fdest = fopen(outfile, "wb");
+        if (!fdest) {
+            fprintf(stderr, "ERROR -> failed to open %s for writing\n", outfile);
+            return 1;
+        }
         w = (int)image->comps[0].w;
         h = (int)image->comps[0].h;
 
@@ -962,7 +967,7 @@ int imagetobmp(opj_image_t * image, const char *outfile) {
             fprintf(fdest, "%c", (OPJ_UINT8)r);
 
             if ((i + 1) % w == 0) {
-                for (pad = w % 4 ? 4 - w % 4 : 0; pad > 0; pad--)	/* ADD */
+                for (pad = (w % 4) ? (4 - w % 4) : 0; pad > 0; pad--)	/* ADD */
                     fprintf(fdest, "%c", 0);
             }
         }
