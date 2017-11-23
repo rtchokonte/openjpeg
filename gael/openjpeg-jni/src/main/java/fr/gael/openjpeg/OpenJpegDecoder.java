@@ -10,54 +10,53 @@ import org.apache.log4j.Logger;
 public class OpenJpegDecoder
 {
 
-   private static final AtomicBoolean IS_INIT = new AtomicBoolean (false);
+   private static final AtomicBoolean IS_INIT = new AtomicBoolean(false);
 
-   private static void loadLibraries ()
+   private static synchronized void loadLibraries()
    {
-      if (IS_INIT.getAndSet (true))
+      if (IS_INIT.getAndSet(true))
       {
          return;
       }
 
       try
       {
-         System.loadLibrary ("openjp2");
+         System.loadLibrary("openjp2");
       }
       catch (Exception e)
       {
-         throw new IllegalStateException (
-               "Cannot load OpenJpeg libraries", e);
+         throw new IllegalStateException("Cannot load OpenJpeg libraries", e);
       }
    }
 
-   private static byte[] getBytesFromFile (File file) throws IOException
+   private static byte[] getBytesFromFile(File file) throws IOException
    {
-      if (file == null || !file.exists () || !file.isFile ())
+      if (file == null || !file.exists() || !file.isFile())
       {
-         throw new IllegalArgumentException ("Invalid file.");
+         throw new IllegalArgumentException("Invalid file.");
       }
 
-      if (file.length () > Integer.MAX_VALUE)
+      if (file.length() > Integer.MAX_VALUE)
       {
-         throw new IllegalArgumentException ("file too long : " + file);
+         throw new IllegalArgumentException("file too long : " + file);
       }
 
-      byte[] buffer = new byte[(int) file.length ()];
-      FileInputStream fis = new FileInputStream (file);
+      byte[] buffer = new byte[(int) file.length()];
+      FileInputStream fis = new FileInputStream(file);
       try
       {
-         fis.read (buffer, 0, buffer.length);
+         fis.read(buffer, 0, buffer.length);
       }
       finally
       {
-         fis.close ();
+         fis.close();
       }
 
       return buffer;
    }
 
    // Logger
-   private final Logger logger = Logger.getLogger (OpenJpegDecoder.class);
+   private final Logger logger = Logger.getLogger(OpenJpegDecoder.class);
 
    // Encoded image
    private byte[] byteInputStream = null;
@@ -73,52 +72,52 @@ public class OpenJpegDecoder
    private int precision = -1;
    private int componentsNumber = -1;
 
-   public OpenJpegDecoder ()
+   public OpenJpegDecoder()
    {
-      loadLibraries ();
+      loadLibraries();
    }
 
-   public byte[] getImage8 ()
+   public byte[] getImage8()
    {
       return image8;
    }
 
-   public void setImage8 (byte[] image8)
+   public void setImage8(byte[] image8)
    {
       this.image8 = image8;
    }
 
-   public short[] getImage16 ()
+   public short[] getImage16()
    {
       return image16;
    }
 
-   public void setImage16 (short[] image16)
+   public void setImage16(short[] image16)
    {
       this.image16 = image16;
    }
 
-   public int[] getImage24 ()
+   public int[] getImage24()
    {
       return image24;
    }
 
-   public void setImage24 (int[] image24)
+   public void setImage24(int[] image24)
    {
       this.image24 = image24;
    }
 
-   public byte[] getByteInputStream ()
+   public byte[] getByteInputStream()
    {
       return byteInputStream;
    }
 
-   public void setByteInputStream (byte[] compressedStream)
+   public void setByteInputStream(byte[] compressedStream)
    {
       this.byteInputStream = compressedStream;
    }
 
-   public long getByteInputStreamLength ()
+   public long getByteInputStreamLength()
    {
       long length;
       if (byteInputStream == null)
@@ -132,42 +131,42 @@ public class OpenJpegDecoder
       return length;
    }
 
-   public int getWidth ()
+   public int getWidth()
    {
       return width;
    }
 
-   public void setWidth (int width)
+   public void setWidth(int width)
    {
       this.width = width;
    }
 
-   public int getHeight ()
+   public int getHeight()
    {
       return height;
    }
 
-   public void setHeight (int height)
+   public void setHeight(int height)
    {
       this.height = height;
    }
 
-   public int getPrecision ()
+   public int getPrecision()
    {
       return precision;
    }
 
-   public void setPrecision (int precision)
+   public void setPrecision(int precision)
    {
       this.precision = precision;
    }
 
-   public int getComponentsNumber ()
+   public int getComponentsNumber()
    {
       return componentsNumber;
    }
 
-   public void setComponentsNumber (int componentsNumber)
+   public void setComponentsNumber(int componentsNumber)
    {
       this.componentsNumber = componentsNumber;
    }
@@ -175,7 +174,7 @@ public class OpenJpegDecoder
    /**
     * Reset decoder
     */
-   public void reset ()
+   public void reset()
    {
       image8 = null;
       image16 = null;
@@ -185,20 +184,19 @@ public class OpenJpegDecoder
       precision = -1;
    }
 
-   public int getDepth ()
+   public int getDepth()
    {
       return ((precision + 7) / 8) * componentsNumber;
    }
 
    /**
-    * Represents result of decoded image.
-    * Called by the native code.
+    * Represents result of decoded image. Called by the native code.
     */
-   protected void alloc8 ()
+   protected void alloc8()
    {
       int length = width * height;
 
-      if ((image8 == null || image8.length != length) && getDepth () == 1)
+      if ((image8 == null || image8.length != length) && getDepth() == 1)
       {
          image8 = new byte[length];
       }
@@ -207,11 +205,11 @@ public class OpenJpegDecoder
    /**
     *
     */
-   protected void alloc16 ()
+   protected void alloc16()
    {
       int length = width * height;
 
-      if ((image16 == null || image16.length != length) && getDepth () == 2)
+      if ((image16 == null || image16.length != length) && getDepth() == 2)
       {
          image16 = new short[length];
       }
@@ -220,52 +218,50 @@ public class OpenJpegDecoder
    /**
     *
     */
-   protected void alloc24 ()
+   protected void alloc24()
    {
       int length = width * height;
 
-      if ((image24 == null || image24.length != length) && getDepth () == 3)
+      if ((image24 == null || image24.length != length) && getDepth() == 3)
       {
          image24 = new int[length];
       }
    }
 
-   public boolean decode (String filename)
+   public boolean decode(String filename)
    {
-      reset ();
+      reset();
 
       if (filename != null)
       {
          try
          {
-            setByteInputStream (getBytesFromFile (new File (filename)));
+            setByteInputStream(getBytesFromFile(new File(filename)));
          }
          catch (IOException e)
          {
-            logger.error ("Cannot convert to byte array the file: " + filename,
-                  e);
+            logger.error("Cannot convert to byte array the file: " + filename, e);
          }
       }
 
-      return internalOpenJpegDecode ();
+      return internalOpenJpegDecode();
    }
 
-   public boolean decodeHeader (String filename)
+   public boolean decodeHeader(String filename)
    {
-      reset ();
+      reset();
       if (filename != null)
       {
          try
          {
-            setByteInputStream (getBytesFromFile (new File (filename)));
+            setByteInputStream(getBytesFromFile(new File(filename)));
          }
          catch (IOException e)
          {
-            logger.error ("Cannot convert to byte array the file: " + filename,
-                  e);
+            logger.error("Cannot convert to byte array the file: " + filename, e);
          }
       }
-      return internalOpenJpegDecodeHeader ();
+      return internalOpenJpegDecodeHeader();
    }
 
    /**
@@ -273,13 +269,13 @@ public class OpenJpegDecoder
     *
     * @return true
     */
-   private native boolean internalOpenJpegDecodeHeader ();
+   private native boolean internalOpenJpegDecodeHeader();
 
    /**
     * Decodes completly the Jpeg2000 image.
     *
     * @return true if inputImage is decoded properly, otherwise false.
     */
-   private native boolean internalOpenJpegDecode ();
+   private native boolean internalOpenJpegDecode();
 
 }
